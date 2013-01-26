@@ -1,51 +1,97 @@
-
+/*jshint jquery:true, devel:true */
+/*global define */
 // This uses require.js to structure javascript:
 // http://requirejs.org/docs/api.html#define
 
 define(function(require) {
     // Receipt verification (https://github.com/mozilla/receiptverifier)
-    require('receiptverifier');
+    //require('receiptverifier');
 
     // Installation button
-    require('./install-button');
+    //require('./install-button');
 
     // Install the layouts
     require('layouts/layouts');
+
+    var _ = require('underscore');
+    var Backbone = require('backbone');
+    require('backbone.localstorage');
 
     // Write your app here.
 
 
     function formatDate(d) {
+        if (!(d instanceof Date)) d = new Date(d);
+
         return (d.getMonth()+1) + '/' +
             d.getDate() + '/' +
             d.getFullYear();
     }
 
+    function formatCurrency(n) {
+        if (n < 0) {
+            return '($' + Math.abs(n) + ')';
+        } else {
+            return '$' + n;
+        }
+    }
+
     // List view
 
     var list = $('.list').get(0);
-    list.add({ title: 'Learn this template',
-               desc: 'This is a list-detail template. Learn more ' +
-                     'about it at its ' +
-                     '<a href="https://github.com/mozilla/mortar-list-detail">project page!</a>',
-               date: new Date() });
-    list.add({ title: 'Make things',
-               desc: 'Make this look like that',
-               date: new Date(12, 9, 5) });
-    for(var i=0; i<8; i++) {
-        list.add({ title: 'Move stuff',
-                   desc: 'Move this over there',
-                   date: new Date(12, 10, 1) });
+
+    function updateTotal() {
+        var total = 0;
+        list.collection.each(function(model) {
+            total += model.get('value');
+        });
+        $('h1', list).text(formatCurrency(total));
     }
 
-    // Detail view
+    list.renderRow = function(model) {
+        var $this = $(this);
 
-    var detail = $('.detail').get(0);
-    detail.render = function(item) {
-        $('.title', this).html(item.get('title'));
-        $('.desc', this).html(item.get('desc'));
-        $('.date', this).text(formatDate(item.get('date')));
+        $this.empty();
+
+        var val = model.get('value');
+        if (val >= 0) {
+            $this.addClass('positive');
+        } else {
+            $this.addClass('negative');
+        }
+
+        $this.append($('<div>').addClass('date').append(formatDate(model.get('date'))));
+        $this.append($('<div>').addClass('title').append(model.get('title')));
+        $this.append($('<div>').addClass('value').append(formatCurrency(val)));
     };
+
+    $('h1', list).text(formatCurrency(0));
+
+    list.collection.localStorage = new Backbone.LocalStorage('list');
+    list.collection.fetch({
+        success: updateTotal
+    });
+
+    $('footer .add', list).click(function() {
+        var val = parseFloat($('footer input[name=value]', list).val());
+        var title = $('footer input[name=title]').val();
+
+        if (_.isNumber(val) && !_.isNaN(val)) {
+            list.collection.create({
+                value: val,
+                title: title,
+                date: new Date()
+            });
+            $('footer input', list).val('');
+
+            updateTotal();
+            
+        } else {
+            alert('Not a valid amount');
+        }
+    });
+
+    list.nextView = '.edit';
 
     // Edit view
 
@@ -61,10 +107,9 @@ define(function(require) {
     edit.getTitle = function() {
         var model = this.view.model;
 
-        if(model) {
+        if (model) {
             return model.get('title');
-        }
-        else {
+        } else {
             return 'New';
         }
     };
@@ -77,8 +122,7 @@ define(function(require) {
 
         if(model) {
             model.set({ title: title.val(), desc: desc.val() });
-        }
-        else {
+        } else {
             list.add({ title: title.val(),
                        desc: desc.val(),
                        date: new Date() });
