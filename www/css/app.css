@@ -33,21 +33,33 @@ x-view.edit .field {
     margin-top: 1em;
 }
 
+.list ul li {
+    width: 100%;
+    padding: 0;
+    display: -moz-box;
+    -moz-box-orient: horizontal;
+}
+
 .list li div {
-    display: inline-block;
+    border-left: solid 1px gray;
+    padding: 1em 0.5em;
+}
+
+.list li div:first-child {
+    border-left: none;
 }
 
 .list li .date {
-    width: 30%;
+    width: 70px;
 }
 
 .list li .title {
-    width: 50%;
+    -moz-box-flex: 1;
 }
 
 .list li .value {
     text-align: right;
-    width: 20%;
+    width: 70px
 }
 
 .list .positive {
