@@ -96,43 +96,32 @@ define(function(require) {
         }
     });
 
-    list.nextView = '.edit';
+    // for some reason list.nextView doesn't work
+    // list.nextView = '.edit';
 
     // Edit view
 
-    var edit = $('.edit').get(0);
+    var edit = $('.detail').get(0);
     edit.render = function(item) {
-        item = item || { id: '', get: function() { return ''; } };
-
-        $('input[name=id]', this).val(item.id);
+        $('h1', this).text(formatDate(item.get('date')));
         $('input[name=title]', this).val(item.get('title'));
-        $('input[name=desc]', this).val(item.get('desc'));
+        $('input[name=value]', this).val(item.get('value'));
     };
 
-    edit.getTitle = function() {
-        var model = this.view.model;
+    $('button.save', edit).click(function() {
+        var $edit = $(edit);
 
-        if (model) {
-            return model.get('title');
+        var val = validateValue($edit.find('input[name=value]').val());
+
+        if (val !== false) {
+            edit.model.save({
+                title: $edit.find('input[name=title]').val(),
+                value: val
+            });
+
+            edit.close();
         } else {
-            return 'New';
+            alert('Not a valid amount');
         }
-    };
-
-    $('button.add', edit).click(function() {
-        var el = $(edit);
-        var title = el.find('input[name=title]');
-        var desc = el.find('input[name=desc]');
-        var model = edit.model;
-
-        if(model) {
-            model.set({ title: title.val(), desc: desc.val() });
-        } else {
-            list.add({ title: title.val(),
-                       desc: desc.val(),
-                       date: new Date() });
-        }
-
-        edit.close();
     });
 });
