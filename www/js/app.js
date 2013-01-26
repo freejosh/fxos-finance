@@ -36,6 +36,12 @@ define(function(require) {
         }
     }
 
+    function validateValue(val) {
+        val = parseFloat(val);
+        if (_.isNumber(val) && !_.isNaN(val)) return val;
+        return false;
+    }
+
     // List view
 
     var list = $('.list').get(0);
@@ -73,13 +79,12 @@ define(function(require) {
     });
 
     $('footer .add', list).click(function() {
-        var val = parseFloat($('footer input[name=value]', list).val());
-        var title = $('footer input[name=title]').val();
+        var val = validateValue($('footer input[name=value]', list).val());
 
-        if (_.isNumber(val) && !_.isNaN(val)) {
+        if (val !== false) {
             list.collection.create({
                 value: val,
-                title: title,
+                title: $('footer input[name=title]').val(),
                 date: new Date()
             });
             $('footer input', list).val('');
